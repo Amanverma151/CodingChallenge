@@ -1,0 +1,105 @@
+?? Coding Challenge
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+public static class OldPhonePad
+{
+    // Mapping of keypads to characters
+    private static readonly Dictionary<char, string> KeypadMapping = new Dictionary<char, string>
+    {
+        { '2', "ABC" },
+        { '3', "DEF" },
+        { '4', "GHI" },
+        { '5', "JKL" },
+        { '6', "MNO" },
+        { '7', "PQRS" },
+        { '8', "TUV" },
+        { '9', "WXYZ" }
+    };
+
+    public static string ConvertToText(string input)
+    {
+        // Validating the input, Checks if the input string is either null, empty, or does not end with a #.
+
+        if (string.IsNullOrEmpty(input) || !input.EndsWith("#"))
+        {
+            throw new ArgumentException("Invalid input format.");
+        }
+
+        // Remove trailing '#'
+        input = input.TrimEnd('#');
+       
+        StringBuilder result = new StringBuilder();
+        int pressCount = 0;
+        char lastDigit = '\0';
+
+        foreach (char c in input)
+        {
+            if (c == ' ') // Pause detected
+            {
+                if (lastDigit != '\0')
+                {
+                    AddCharacter(lastDigit, pressCount, result);
+                    lastDigit = '\0';
+                    pressCount = 0;
+                }
+            }
+            else if (KeypadMapping.ContainsKey(c))
+            {
+                if (c == lastDigit)
+                {
+                    pressCount++;
+                }
+                else
+                {
+                    if (lastDigit != '\0')
+                    {
+                        AddCharacter(lastDigit, pressCount, result);
+                    }
+                    lastDigit = c;
+                    pressCount = 1;
+                }
+            }
+            else if (c == '*')
+            {
+                // Ignore '*' characters
+                continue;
+            }
+            else
+            {
+                throw new ArgumentException("Invalid character in input.");
+            }
+        }
+
+        // Add the last accumulated character
+        if (lastDigit != '\0')
+        {
+            AddCharacter(lastDigit, pressCount, result);
+        }
+
+        return result.ToString();
+    }
+
+    private static void AddCharacter(char digit, int count, StringBuilder result)
+    {
+        if (KeypadMapping.TryGetValue(digit, out string characters))
+        {
+            int index = (count - 1) % characters.Length; // Wrap around using modulo
+            result.Append(characters[index]);
+        }
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        // Test cases
+        Console.WriteLine(OldPhonePad.ConvertToText("33#")); // Output: E
+        Console.WriteLine(OldPhonePad.ConvertToText("227*#")); // Output: B
+        Console.WriteLine(OldPhonePad.ConvertToText("4433555 555666#")); // Output: HELLO
+        Console.WriteLine(OldPhonePad.ConvertToText("8 88777444666*664#")); // Output: TURING
+    }
+}
